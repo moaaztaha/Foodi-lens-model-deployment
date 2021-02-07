@@ -64,36 +64,37 @@
             const marker3 = new google.maps.Marker({
                 position: marker,
                 map: map,
+                zoom: 50
                 //icon: 'https://www.pinclipart.com/picdir/big/149-1494416_hand-point-down-comments-hand-point-icon-transparent.png',
                 //label: { fontWeight: 'bold', fontSize: '14px', text: 'KFC' }
             });
 
 
-            // Create the places service.
-            const service = new google.maps.places.PlacesService(map);
-            let getNextPage;
-            const moreButton = document.getElementById("more");
+            // // Create the places service.
+            // const service = new google.maps.places.PlacesService(map);
+            // let getNextPage;
+            // const moreButton = document.getElementById("more");
 
-            moreButton.onclick = function () {
-                moreButton.disabled = true;
+            // moreButton.onclick = function () {
+            //     moreButton.disabled = true;
 
-                if (getNextPage) {
-                    getNextPage();
-                }
-            };
-            // Perform a nearby search.
-            service.nearbySearch(
-                { location: marker, radius: 500, type: "restaurant" },
-                (results, status, pagination) => {
-                    if (status !== "OK") return;
-                    createMarkers(results, map);
-                    moreButton.disabled = !pagination.hasNextPage;
+            //     if (getNextPage) {
+            //         getNextPage();
+            //     }
+            // };
+            // // Perform a nearby search.
+            // service.nearbySearch(
+            //     { location: marker, radius: 500, type: "restaurant" },
+            //     (results, status, pagination) => {
+            //         if (status !== "OK") return;
+            //         createMarkers(results, map);
+            //         moreButton.disabled = !pagination.hasNextPage;
 
-                    if (pagination.hasNextPage) {
-                        getNextPage = pagination.nextPage;
-                    }
-                }
-            );
+            //         if (pagination.hasNextPage) {
+            //             getNextPage = pagination.nextPage;
+            //         }
+            //     }
+            // );
         }
     </script>
 

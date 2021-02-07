@@ -68,6 +68,7 @@ async def upload(request):
     form = await request.form()
     img_bytes = await (form["file"].read())
     user_location = form['location']
+    print(user_location)
     output, cords = predict_from_bytes(img_bytes, user_location)
     return templates.TemplateResponse('result.html', {'request': request, 'output': output, 'cords': cords})
 
@@ -95,34 +96,23 @@ def predict_from_bytes(img_bytes, user_location):
 
 
 def search(prediction, user_location):
+    prediction = prediction.replace('_', ' ')
     if(user_location):
-        url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={user_location}&radius=1500&type=restaurant&keyword={prediction}&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
-        r = requests.get(url)
-        x = r.json()
-        print(x)
-        if len(x['results']) != 0:
-            lat, lng = x['results'][0]['geometry']['location']['lat'], x['results'][0]['geometry']['location']['lng']
-            return {'lat': lat, 'lng': lng}
+        url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={prediction}&inputtype=textquery&fields=formatted_address,name,rating,opening_hours,geometry&locationbias=circle:20000@{user_location}&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
     else:
         url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={prediction}&inputtype=textquery&fields=formatted_address,name,rating,opening_hours,geometry&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
-        r = requests.get(url)
-        x = r.json()
-        print(x)
-        if len(x['candidates']) != 0:
-            lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
-            return {'lat': lat, 'lng': lng}
+    r = requests.get(url)
+    x = r.json()
+    print(x)
+    if len(x['candidates']) != 0:
+        lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
+        return {'lat': lat, 'lng': lng}
 
     return {'lat': 29.9793553108874, 'lng': 31.13420621634856}
 
 
 @app.route("/")
 def form(request):
-    print(request.client.host)
-    url = f'http://api.ipstack.com/{request.client.host}?access_key=8f531ad040c96def83a76cbf1537a9fe'
-    r = requests.get(url)
-    j = json.loads(r.text)
-    city = j['city']
-    print(city)
     index_html = path/'static'/'index.html'
     return HTMLResponse(index_html.open().read())
 
