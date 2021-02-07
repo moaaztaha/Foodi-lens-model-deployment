@@ -91,7 +91,7 @@ def search(prediction):
     r = requests.get(url)
     x = r.json()
     print(x)
-    if x != None:
+    if len(x['candidates']) != 0:
         lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
         return { 'lat': lat, 'lng': lng }
     else:
