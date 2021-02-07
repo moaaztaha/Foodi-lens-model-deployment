@@ -34,6 +34,7 @@
 					<span class="label-input100">Select Only One Image File</span>
 					<input id="inp_file" type="file" name="file" >
 					<input id="inp_img" type="hidden" name="img" value="">
+					<input type="hidden" id="location" name="location">
 					<span class="focus-input100"></span>
 				</div>
 				<div>
@@ -56,5 +57,13 @@
 		</div>
 	</div>
 <script src="static/js/utility.js"></script>
+<script>
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(function(position) {
+			const location = '' + position.coords.latitude + ',' + position.coords.longitude;
+			document.getElementById('location').value = location;
+		})
+	}
+</script>
 </body>
 </html>

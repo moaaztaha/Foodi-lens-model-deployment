@@ -60,11 +60,12 @@ PREDICTION_FILE_SRC = path/'static'/'predictions.txt'
 async def upload(request):
     form = await request.form()
     img_bytes = await (form["file"].read())
-    output, cords = predict_from_bytes(img_bytes)
+    user_location = form['location']
+    output, cords = predict_from_bytes(img_bytes, user_location)
     return templates.TemplateResponse('result.html', {'request': request, 'output': output, 'cords': cords})
 
 
-def predict_from_bytes(img_bytes):
+def predict_from_bytes(img_bytes, user_location):
     pred,pred_idx,probs = learn.predict(img_bytes)
     classes = learn.dls.vocab
     predictions = sorted(zip(classes, map(float, probs)), key=lambda p: p[1], reverse=True)
@@ -76,7 +77,7 @@ def predict_from_bytes(img_bytes):
         output+= dict[pred[0]] +  ' ' + str(float("{:.3f}".format(pred[1]))) + ' |\t'
     
     print(dict[predictions[0][0]])
-    search_output = search(dict[predictions[0][0]])
+    search_output = search(dict[predictions[0][0]], user_location)
         
 
 
@@ -84,18 +85,25 @@ def predict_from_bytes(img_bytes):
     # return HTMLResponse(result_html)
     return output, search_output
 
-def search(prediction):
-    url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={prediction}&inputtype=textquery&fields=formatted_address,name,rating,opening_hours,geometry&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
-    #url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?query={prediction}&inputtype=textquery&fields=formatted_address,name,rating,opening_hours,geometry&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
-
-    r = requests.get(url)
-    x = r.json()
-    print(x)
-    if len(x['candidates']) != 0    :
-        lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
-        return { 'lat': lat, 'lng': lng }
+def search(prediction, user_location):
+    if(user_location):
+        url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={user_location}&radius=1500&type=restaurant&keyword={prediction}&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
+        r = requests.get(url)
+        x = r.json()
+        print(x)
+        if len(x['results']) != 0:
+            lat, lng = x['results'][0]['geometry']['location']['lat'], x['results'][0]['geometry']['location']['lng']
+            return { 'lat': lat, 'lng': lng }
     else:
-        return { 'lat': 29.9793553108874, 'lng': 31.13420621634856}
+        url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={prediction}&inputtype=textquery&fields=formatted_address,name,rating,opening_hours,geometry&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
+        r = requests.get(url)
+        x = r.json()
+        print(x)
+        if len(x['candidates']) != 0:
+            lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
+            return { 'lat': lat, 'lng': lng }
+
+    return { 'lat': 29.9793553108874, 'lng': 31.13420621634856}
     
     
 
@@ -106,5 +114,5 @@ def form(request):
     return HTMLResponse(index_html.open().read())
 
 if __name__ == "__main__":
-    if "serve" in sys.argv: uvicorn.run(app, host="0.0.0.0", port=8080)
-    #uvicorn.run(app, host='0.0.0.0', port=8000)
+    if "serve" in sys.argv: 
+        uvicorn.run(app, host="0.0.0.0", port=8080)
