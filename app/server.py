@@ -95,7 +95,7 @@ def search(prediction):
         lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
         return { 'lat': lat, 'lng': lng }
     else:
-        return { 'lat': 31.1342, 'lng': 29.9792} 
+        return { 'lat': 29.9793553108874, 'lng': 31.13420621634856}
     
     
 
