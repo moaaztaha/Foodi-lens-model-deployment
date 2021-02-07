@@ -8,7 +8,7 @@ from io import BytesIO
 from fastai.vision.all import *
 import math
 
-model_file_url = 'https://github.com/psmathur/pets_breeds_classifier/blob/master/pets_res_34_export.pkl?raw=true'
+model_file_url = 'https://github.com/JoannaDiao/FoodieLens/blob/main/web-app/app/models/export.pkl?raw=true'
 model_file_name = 'export.pkl'
 path = Path(__file__).parent
 
@@ -29,15 +29,15 @@ for line in file:
   dict[int(key)] = value
 
 
-# async def download_file(url, dest):
-#     if dest.exists(): return
-#     async with aiohttp.ClientSession() as session:
-#         async with session.get(url) as response:
-#             data = await response.read()
-#             with open(dest, 'wb') as f: f.write(data)
+async def download_file(url, dest):
+    if dest.exists(): return
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            data = await response.read()
+            with open(dest, 'wb') as f: f.write(data)
 
 async def setup_learner():
-    # await download_file(model_file_url, path/'models'/f'{model_file_name}')
+    await download_file(model_file_url, path/'models'/f'{model_file_name}')
     try:
         learn = load_learner(path/'models'/model_file_name, cpu=True)
         return learn
