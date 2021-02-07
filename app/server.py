@@ -3,7 +3,9 @@ from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from starlette.middleware.cors import CORSMiddleware
-import uvicorn, aiohttp, asyncio
+import uvicorn
+import aiohttp
+import asyncio
 from io import BytesIO
 from fastai.vision.all import *
 import math
@@ -15,26 +17,30 @@ path = Path(__file__).parent
 templates = Jinja2Templates(directory='app/templates')
 
 app = Starlette()
-app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_headers=['X-Requested-With', 'Content-Type'])
+app.add_middleware(CORSMiddleware, allow_origins=[
+                   '*'], allow_headers=['X-Requested-With', 'Content-Type'])
 app.mount('/static', StaticFiles(directory='app/static'))
 
 api_key = 'AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU'
-# url variable store url 
+# url variable store url
 url = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
 
 dict = {}
 file = open("message.txt")
 for line in file:
-  key, value = line.split()
-  dict[int(key)] = value
+    key, value = line.split()
+    dict[int(key)] = value
 
 
 async def download_file(url, dest):
-    if dest.exists(): return
+    if dest.exists():
+        return
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             data = await response.read()
-            with open(dest, 'wb') as f: f.write(data)
+            with open(dest, 'wb') as f:
+                f.write(data)
+
 
 async def setup_learner():
     await download_file(model_file_url, path/'models'/f'{model_file_name}')
@@ -56,6 +62,7 @@ loop.close()
 
 PREDICTION_FILE_SRC = path/'static'/'predictions.txt'
 
+
 @app.route("/upload", methods=["POST"])
 async def upload(request):
     form = await request.form()
@@ -66,24 +73,26 @@ async def upload(request):
 
 
 def predict_from_bytes(img_bytes, user_location):
-    pred,pred_idx,probs = learn.predict(img_bytes)
+    pred, pred_idx, probs = learn.predict(img_bytes)
     classes = learn.dls.vocab
-    predictions = sorted(zip(classes, map(float, probs)), key=lambda p: p[1], reverse=True)
+    predictions = sorted(zip(classes, map(float, probs)),
+                         key=lambda p: p[1], reverse=True)
     result_html1 = path/'static'/'result1.html'
     result_html2 = path/'static'/'result2.html'
-    
+
     output = ''
     for pred in predictions[0:3]:
-        output+= dict[pred[0]] +  ' ' + str(float("{:.3f}".format(pred[1]))) + ' |\t'
-    
+        output += dict[pred[0]] + ' ' + \
+            str(float("{:.3f}".format(pred[1]))) + ' |\t'
+
     print(dict[predictions[0][0]])
     search_output = search(dict[predictions[0][0]], user_location)
-        
 
-
-    result_html = str(result_html1.open().read() + output + result_html2.open().read())
+    result_html = str(result_html1.open().read() +
+                      output + result_html2.open().read())
     # return HTMLResponse(result_html)
     return output, search_output
+
 
 def search(prediction, user_location):
     if(user_location):
@@ -93,7 +102,7 @@ def search(prediction, user_location):
         print(x)
         if len(x['results']) != 0:
             lat, lng = x['results'][0]['geometry']['location']['lat'], x['results'][0]['geometry']['location']['lng']
-            return { 'lat': lat, 'lng': lng }
+            return {'lat': lat, 'lng': lng}
     else:
         url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={prediction}&inputtype=textquery&fields=formatted_address,name,rating,opening_hours,geometry&key=AIzaSyBOp0pH8QYUOc1E0CbHU8a9_N2Dk0JmJBU"
         r = requests.get(url)
@@ -101,18 +110,23 @@ def search(prediction, user_location):
         print(x)
         if len(x['candidates']) != 0:
             lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
-            return { 'lat': lat, 'lng': lng }
+            return {'lat': lat, 'lng': lng}
 
-    return { 'lat': 29.9793553108874, 'lng': 31.13420621634856}
-    
-    
+    return {'lat': 29.9793553108874, 'lng': 31.13420621634856}
 
 
 @app.route("/")
 def form(request):
+    print(request.client.host)
+    url = f'http://api.ipstack.com/{request.client.host}?access_key=8f531ad040c96def83a76cbf1537a9fe'
+    r = requests.get(url)
+    j = json.loads(r.text)
+    city = j['city']
+    print(city)
     index_html = path/'static'/'index.html'
     return HTMLResponse(index_html.open().read())
 
+
 if __name__ == "__main__":
-    if "serve" in sys.argv: 
+    if "serve" in sys.argv:
         uvicorn.run(app, host="0.0.0.0", port=8080)
