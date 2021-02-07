@@ -90,8 +90,13 @@ def search(prediction):
 
     r = requests.get(url)
     x = r.json()
-    lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
-    return { 'lat': lat, 'lng': lng }
+    print(x)
+    if x != None:
+        lat, lng = x['candidates'][0]['geometry']['location']['lat'], x['candidates'][0]['geometry']['location']['lng']
+        return { 'lat': lat, 'lng': lng }
+    else:
+        return 31.1342, 29.9792
+    
     
 
 
